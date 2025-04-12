@@ -2,7 +2,7 @@
 .services-section {
     position: relative;
     padding: 5rem 0;
-    background-image: url('/img/1.jpg?height=1080&width=1920&text=House+Background');
+    background-image: url('/placeholder.svg?height=1080&width=1920&text=House+Background');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -40,6 +40,7 @@
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%;
+    position: relative;
   }
   
   .service-card:hover {
@@ -88,6 +89,34 @@
     color: var(--primary-color);
   }
   
+  /* Arrow Styles */
+  .service-arrow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: transform 0.4s ease, opacity 0.4s ease;
+    z-index: 3;
+  }
+  
+  .service-arrow i {
+    color: var(--dark-text);
+    font-size: 1.25rem;
+  }
+  
+  .service-card:hover .service-arrow {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  
   .service-card::after {
     content: '';
     position: absolute;
@@ -123,6 +152,15 @@
     .service-title {
       font-size: 1.25rem;
       padding: 1.25rem;
+    }
+    
+    .service-arrow {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .service-arrow i {
+      font-size: 1rem;
     }
   }
   
