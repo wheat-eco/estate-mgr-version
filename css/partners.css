@@ -1,0 +1,43 @@
+/* Partners Section Styles */
+.partners-section {
+  padding: 4rem 0;
+  background-color: #fff;
+  border-top: 1px solid #eee;
+}
+
+.partners-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.partners-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+  align-items: center;
+  justify-items: center;
+}
+
+.partner-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0.8;
+  max-width: 100%;
+}
+
+.partner-logo:hover {
+  transform: translateY(-5px);
+  opacity: 1;
+}
+
+.partner-logo img {
+  max-width: 100%;
+  height: auto;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+/* Partner
