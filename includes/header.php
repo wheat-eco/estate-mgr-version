@@ -51,14 +51,18 @@
         }
       }
       
-      /* Ensure header is fixed at the top */
+      /* Ensure header is fixed at the top but maintain dark background */
       .header {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         z-index: 1000;
-        background-color: #fff;
+        /* Removed the white background-color */
+        /* Using the same background as in header.css */
+        background: rgba(58, 58, 58, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
     </style>
@@ -104,8 +108,7 @@
               </li>
             </ul>
           </nav>
-
-          <nav class="main-nav bottom-nav">
+ <nav class="main-nav bottom-nav">
             <ul class="nav-list">
               <li class="nav-item">
                 <a href="/financial-services.php" class="nav-link">FINANCIAL SERVICES</a>
