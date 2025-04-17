@@ -1,0 +1,125 @@
+/* Valuations Section Styles */
+.valuations-section {
+  background-color: #f9f9f9;
+  padding: 0;
+}
+
+.valuations-container {
+  display: flex;
+  flex-direction: row;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.valuations-image {
+  flex: 1;
+  overflow: hidden;
+}
+
+.valuations-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.valuations-content {
+  flex: 1;
+  background-color: var(--primary-color); /* Updated to brand yellow */
+  padding: 4rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.valuations-heading {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--dark-text);
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+
+.valuations-text {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--dark-text);
+  margin-bottom: 1.5rem;
+}
+
+.valuations-cta {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--dark-text);
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.btn-dark {
+  display: inline-block;
+  background-color: var(--dark-bg); /* Updated to brand dark gray */
+  color: var(--light-text);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.btn-dark:hover {
+  background-color: var(--darker-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Valuations Section Responsive */
+@media (max-width: 992px) {
+  .valuations-container {
+    flex-direction: column;
+  }
+  
+  .valuations-image, .valuations-content {
+    flex: none;
+    width: 100%;
+  }
+  
+  .valuations-content {
+    padding: 3rem 2rem;
+  }
+  
+  .valuations-heading {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .valuations-content {
+    padding: 2.5rem 2rem;
+  }
+  
+  .valuations-heading {
+    font-size: 1.8rem;
+  }
+  
+  .valuations-text, .valuations-cta {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .valuations-content {
+    padding: 2rem 1.5rem;
+  }
+  
+  .valuations-heading {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .btn-dark {
+    width: 100%;
+    text-align: center;
+  }
+}
