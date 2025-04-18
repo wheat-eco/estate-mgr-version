@@ -7,73 +7,21 @@
 $pageTitle = 'Available Rental Properties';
 $additionalCss = ['rental-properties'];
 
+// Include database connection
+require_once 'includes/db.php';
+
+// Get all available rental properties
+$propertiesQuery = "SELECT p.*, a.name as area_name, r.name as region_name, 
+                   (SELECT image_path FROM property_images WHERE property_id = p.id AND is_featured = 1 LIMIT 1) as image 
+                   FROM properties p 
+                   JOIN areas a ON p.area_id = a.id 
+                   JOIN regions r ON a.region_id = r.id 
+                   WHERE p.property_category = 'rent' 
+                   ORDER BY p.created_at DESC";
+$propertiesResult = $conn->query($propertiesQuery);
+
 // Include header
 include('includes/header.php');
-
-// In a real application, you would fetch this data from a database
-// This is just sample data for demonstration - combining properties from both regions
-$properties = [
-    [
-        'id' => 2,
-        'title' => 'Modern Apartment in Saltcoats',
-        'location' => 'Harbour Street, Saltcoats',
-        'area' => 'Saltcoats',
-        'bedrooms' => 2,
-        'bathrooms' => 1,
-        'type' => 'Apartment',
-        'postcode' => 'KA21',
-        'price' => 650,
-        'status' => 'AVAILABLE',
-        'available_date' => '15-03-2025',
-        'image' => '/img/property2.jpg',
-        'region' => 'North Ayrshire'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Family Home in Irvine',
-        'location' => 'Castlepark, Irvine',
-        'area' => 'Irvine',
-        'bedrooms' => 4,
-        'bathrooms' => 2,
-        'type' => 'Detached',
-        'postcode' => 'KA12',
-        'price' => 950,
-        'status' => 'AVAILABLE',
-        'available_date' => '01-04-2025',
-        'image' => '/img/property3.jpg',
-        'region' => 'North Ayrshire'
-    ],
-    [
-        'id' => 4,
-        'title' => 'Modern Apartment in Kilmarnock',
-        'location' => 'John Finnie Street, Kilmarnock',
-        'area' => 'Kilmarnock',
-        'bedrooms' => 2,
-        'bathrooms' => 1,
-        'type' => 'Apartment',
-        'postcode' => 'KA1',
-        'price' => 600,
-        'status' => 'AVAILABLE',
-        'available_date' => '01-03-2025',
-        'image' => '/img/property4.jpg',
-        'region' => 'East Ayrshire'
-    ],
-    [
-        'id' => 5,
-        'title' => 'Family Home in Stewarton',
-        'location' => 'Lainshaw Street, Stewarton',
-        'area' => 'Stewarton',
-        'bedrooms' => 3,
-        'bathrooms' => 2,
-        'type' => 'Semi-Detached',
-        'postcode' => 'KA3',
-        'price' => 850,
-        'status' => 'AVAILABLE',
-        'available_date' => '15-03-2025',
-        'image' => '/img/property5.jpg',
-        'region' => 'East Ayrshire'
-    ]
-];
 ?>
 
 <!-- Available Properties Section -->
@@ -84,51 +32,59 @@ $properties = [
       Browse our current selection of available rental properties across Ayrshire
     </p>
     
-  
-    
     <div class="properties-list">
-      <?php foreach($properties as $property): ?>
-        <div class="property-item">
-          <div class="property-image-container">
-            <img src="<?php echo $property['image']; ?>" alt="<?php echo $property['title']; ?>" class="property-image">
-            <?php if($property['status']): ?>
-              <div class="property-status"><?php echo $property['status']; ?></div>
-            <?php endif; ?>
-          </div>
-          <div class="property-details">
-            <h2 class="property-title"><?php echo $property['title']; ?></h2>
-            <p class="property-location"><?php echo $property['location']; ?> (<?php echo $property['region']; ?>)</p>
-            
-            <div class="property-features">
-              <div class="property-feature">
-                <i class="fas fa-map-marker-alt"></i> <?php echo $property['area']; ?>
+      <?php if ($propertiesResult->num_rows > 0): ?>
+        <?php while ($property = $propertiesResult->fetch_assoc()): ?>
+          <div class="property-item">
+            <div class="property-image-container">
+              <?php if ($property['image']): ?>
+                <img src="<?php echo $property['image']; ?>" alt="<?php echo $property['title']; ?>" class="property-image">
+              <?php else: ?>
+                <img src="/img/property-placeholder.jpg" alt="<?php echo $property['title']; ?>" class="property-image">
+              <?php endif; ?>
+              <?php if($property['status']): ?>
+                <div class="property-status"><?php echo $property['status']; ?></div>
+              <?php endif; ?>
+            </div>
+            <div class="property-details">
+              <h2 class="property-title"><?php echo $property['title']; ?></h2>
+              <p class="property-location"><?php echo $property['location']; ?> (<?php echo $property['region_name']; ?>)</p>
+              
+              <div class="property-features">
+                <div class="property-feature">
+                  <i class="fas fa-map-marker-alt"></i> <?php echo $property['area_name']; ?>
+                </div>
+                <div class="property-feature">
+                  <i class="fas fa-bed"></i> <?php echo $property['bedrooms']; ?> Bedrooms
+                </div>
+                <div class="property-feature">
+                  <i class="fas fa-bath"></i> <?php echo $property['bathrooms']; ?> Bathroom<?php echo $property['bathrooms'] > 1 ? 's' : ''; ?>
+                </div>
+                <div class="property-feature">
+                  <i class="fas fa-home"></i> <?php echo $property['property_type']; ?>
+                </div>
+                <div class="property-feature">
+                  <i class="fas fa-map-pin"></i> <?php echo $property['postcode']; ?>
+                </div>
+                <div class="property-feature">
+                  <i class="fas fa-calendar"></i> <?php echo date('d-m-Y', strtotime($property['available_date'])); ?>
+                </div>
               </div>
-              <div class="property-feature">
-                <i class="fas fa-bed"></i> <?php echo $property['bedrooms']; ?> Bedrooms
-              </div>
-              <div class="property-feature">
-                <i class="fas fa-bath"></i> <?php echo $property['bathrooms']; ?> Bathroom
-              </div>
-              <div class="property-feature">
-                <i class="fas fa-home"></i> <?php echo $property['type']; ?>
-              </div>
-              <div class="property-feature">
-                <i class="fas fa-map-pin"></i> <?php echo $property['postcode']; ?>
-              </div>
-              <div class="property-feature">
-                <i class="fas fa-calendar"></i> <?php echo $property['available_date']; ?>
+              
+              <div class="property-price-container">
+                <div class="property-price">
+                  £<?php echo $property['price']; ?> <span class="pcm">PCM</span>
+                </div>
+                <a href="/property-details.php?id=<?php echo $property['id']; ?>" class="property-button">More Info</a>
               </div>
             </div>
-            
-            <div class="property-price-container">
-              <div class="property-price">
-                £<?php echo $property['price']; ?> <span class="pcm">PCM</span>
-              </div>
-              <a href="/property-details.php?id=<?php echo $property['id']; ?>" class="property-button">More Info</a>
-            </div>
           </div>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <div class="no-properties">
+          <p>No rental properties available at the moment. Please check back soon.</p>
         </div>
-      <?php endforeach; ?>
+      <?php endif; ?>
     </div>
     
     <div class="rental-cta">

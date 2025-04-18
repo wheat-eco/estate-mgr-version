@@ -7,6 +7,19 @@
 $pageTitle = 'Properties For Rent';
 $additionalCss = ['rental-properties'];
 
+// Include database connection
+require_once 'includes/db.php';
+
+// Get regions for rental properties
+$regionsQuery = "SELECT r.id, r.name, r.slug, COUNT(p.id) as property_count 
+                FROM regions r 
+                LEFT JOIN areas a ON r.id = a.region_id 
+                LEFT JOIN properties p ON a.id = p.area_id AND p.property_category = 'rent' 
+                GROUP BY r.id 
+                HAVING property_count > 0 
+                ORDER BY r.name";
+$regionsResult = $conn->query($regionsQuery);
+
 // Include header
 include('includes/header.php');
 ?>
@@ -22,35 +35,26 @@ include('includes/header.php');
     </p>
     
     <div class="rental-locations">
-      <!-- North Ayrshire Location Card -->
-      <a href="/to-rent-north-ayrshire.php" class="location-card">
-        <div class="location-image">
-          <img src="/img/north-ayrshire.jpg" alt="North Ayrshire Properties">
-        </div>
-        <div class="location-content">
-          <h2 class="location-title">To Rent North Ayrshire</h2>
-          <p class="location-description">
-            Discover our selection of rental properties in North Ayrshire, including Saltcoats, 
-            Kilwinning, Irvine, and surrounding areas.
-          </p>
-          <span class="location-button">View Properties</span>
-        </div>
-      </a>
-      
-      <!-- East Ayrshire Location Card -->
-      <a href="/to-rent-east-ayrshire.php" class="location-card">
-        <div class="location-image">
-          <img src="/img/east-ayrshire.jpg" alt="East Ayrshire Properties">
-        </div>
-        <div class="location-content">
-          <h2 class="location-title">To Rent East Ayrshire</h2>
-          <p class="location-description">
-            Browse our range of rental properties in East Ayrshire, including Kilmarnock, 
-            Cumnock, Stewarton, and surrounding areas.
-          </p>
-          <span class="location-button">View Properties</span>
-        </div>
-      </a>
+      <?php if ($regionsResult->num_rows > 0): ?>
+        <?php while ($region = $regionsResult->fetch_assoc()): ?>
+          <!-- Region Location Card -->
+          <a href="/to-rent-<?php echo $region['slug']; ?>.php" class="location-card">
+            <div class="location-image">
+              <img src="/img/<?php echo $region['slug']; ?>.jpg" alt="<?php echo $region['name']; ?> Properties">
+            </div>
+            <div class="location-content">
+              <h2 class="location-title">To Rent <?php echo $region['name']; ?></h2>
+              <p class="location-description">
+                Discover our selection of rental properties in <?php echo $region['name']; ?>.
+                We currently have <?php echo $region['property_count']; ?> properties available.
+              </p>
+              <span class="location-button">View Properties</span>
+            </div>
+          </a>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <p>No rental properties available at the moment. Please check back soon.</p>
+      <?php endif; ?>
     </div>
     
     <div class="rental-process">
