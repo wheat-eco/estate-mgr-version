@@ -3,188 +3,235 @@
  * Property Details Page for Love View Estate
  */
 
+// Include database connection
+require_once('includes/db.php');
+
 // Get property ID from URL
-$property_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$propertyId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// In a real application, you would fetch this data from a database based on the ID
-// This is just sample data for demonstration
-$properties = [
-    1 => [
-        'id' => 1,
-        'title' => 'Bridgend, Kilwinning',
-        'location' => 'Bridgend, Kilwinning',
-        'area' => 'Kilwinning',
-        'bedrooms' => 3,
-        'bathrooms' => 1,
-        'type' => 'Terraced',
-        'postcode' => 'KA13',
-        'price' => 800,
-        'status' => 'LET AGREED',
-        'available_date' => '28-02-2025',
-        'image' => '/img/property1.jpg',
-        'region' => 'North Ayrshire',
-        'description' => 'A well-presented three-bedroom terraced house in the popular Bridgend area of Kilwinning. The property comprises an entrance hallway, spacious lounge, modern fitted kitchen, three good-sized bedrooms, and a family bathroom. The property benefits from gas central heating, double glazing, and a private garden to the rear. Conveniently located for local amenities, schools, and transport links.',
-        'features' => [
-            'Gas Central Heating',
-            'Double Glazing',
-            'Private Garden',
-            'Modern Kitchen',
-            'Close to Schools',
-            'Good Transport Links',
-            'On-street Parking',
-            'Recently Decorated'
-        ],
-        'epc_rating' => 'C',
-        'council_tax' => 'B',
-        'deposit' => 800,
-        'furnished' => 'Unfurnished',
-        'pets' => 'Considered',
-        'smokers' => 'No',
-        'gallery' => [
-            '/img/property1.jpg',
-            '/img/property1-2.jpg',
-            '/img/property1-3.jpg',
-            '/img/property1-4.jpg',
-            '/img/property1-5.jpg'
-        ]
-    ],
-    // Add more properties as needed
-];
-
-// Check if property exists
-if (!isset($properties[$property_id])) {
-    // Redirect to properties page if property not found
-    header('Location: /for-rent.php');
+// If no property ID provided, redirect to home page
+if ($propertyId <= 0) {
+    header('Location: index.php');
     exit;
 }
 
-$property = $properties[$property_id];
+// Fetch property details
+$query = "SELECT p.*, a.name as area_name, r.name as region_name 
+          FROM properties p 
+          JOIN areas a ON p.area_id = a.id 
+          JOIN regions r ON a.region_id = r.id 
+          WHERE p.id = ?";
+
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $propertyId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// If property not found, redirect to home page
+if ($result->num_rows == 0) {
+    header('Location: index.php');
+    exit;
+}
+
+// Get property data
+$property = $result->fetch_assoc();
+
+// Get property images
+$imagesQuery = "SELECT * FROM property_images WHERE property_id = ? ORDER BY is_featured DESC";
+$imagesStmt = $conn->prepare($imagesQuery);
+$imagesStmt->bind_param("i", $propertyId);
+$imagesStmt->execute();
+$imagesResult = $imagesStmt->get_result();
+
+$images = [];
+while ($image = $imagesResult->fetch_assoc()) {
+    $images[] = $image;
+}
+
+// Get property documents
+$documentsQuery = "SELECT * FROM property_documents WHERE property_id = ?";
+$documentsStmt = $conn->prepare($documentsQuery);
+$documentsStmt->bind_param("i", $propertyId);
+$documentsStmt->execute();
+$documentsResult = $documentsStmt->get_result();
+
+$documents = [];
+while ($document = $documentsResult->fetch_assoc()) {
+    $documents[] = $document;
+}
+
+// Get property features
+$featuresQuery = "SELECT * FROM property_features WHERE property_id = ?";
+$featuresStmt = $conn->prepare($featuresQuery);
+$featuresStmt->bind_param("i", $propertyId);
+$featuresStmt->execute();
+$featuresResult = $featuresStmt->get_result();
+
+$features = [];
+while ($feature = $featuresResult->fetch_assoc()) {
+    $features[] = $feature;
+}
 
 // Page specific variables
 $pageTitle = $property['title'];
-$additionalCss = ['rental-properties'];
+$additionalCss = ['property-details'];
 
 // Include header
 include('includes/header.php');
 ?>
 
 <!-- Property Details Section -->
-<section class="property-detail-section">
-  <div class="property-detail-container">
+<section class="property-details-section">
+  <div class="property-container">
+    <div class="property-header">
+      <div class="property-title-area">
+        <h1 class="property-title"><?php echo $property['title']; ?></h1>
+        <p class="property-location"><?php echo $property['location']; ?></p>
+      </div>
+      <div class="property-price-area">
+        <div class="property-price">
+          £<?php echo number_format($property['price'], 0); ?>
+          <?php if ($property['property_category'] == 'rent'): ?>
+            <span class="pcm">PCM</span>
+          <?php endif; ?>
+        </div>
+        <div class="property-status"><?php echo $property['status']; ?></div>
+      </div>
+    </div>
+    
     <!-- Property Gallery -->
     <div class="property-gallery">
-      <img src="<?php echo $property['image']; ?>" alt="<?php echo $property['title']; ?>" class="main-image">
-      
-      <?php if(isset($property['gallery']) && count($property['gallery']) > 0): ?>
-        <div class="thumbnail-grid">
-          <?php foreach($property['gallery'] as $image): ?>
-            <img src="<?php echo $image; ?>" alt="<?php echo $property['title']; ?>" class="thumbnail">
-          <?php endforeach; ?>
+      <?php if (count($images) > 0): ?>
+        <div class="main-image">
+          <img src="<?php echo $images[0]['image_path']; ?>" alt="<?php echo $property['title']; ?>" id="mainImage">
+        </div>
+        <?php if (count($images) > 1): ?>
+          <div class="thumbnail-container">
+            <?php foreach($images as $index => $image): ?>
+              <div class="thumbnail" onclick="changeMainImage('<?php echo $image['image_path']; ?>')">
+                <img src="<?php echo $image['image_path']; ?>" alt="Thumbnail <?php echo $index + 1; ?>">
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      <?php else: ?>
+        <div class="main-image">
+          <img src="/img/property-placeholder.jpg" alt="<?php echo $property['title']; ?>">
         </div>
       <?php endif; ?>
     </div>
     
-    <!-- Property Content -->
-    <div class="property-detail-content">
-      <!-- Left Column - Description and Features -->
-      <div class="property-description-section">
-        <h1><?php echo $property['title']; ?></h1>
-        <p class="property-location"><?php echo $property['location']; ?> (<?php echo $property['region']; ?>)</p>
-        
-        <?php if($property['status']): ?>
-          <div class="property-status-badge"><?php echo $property['status']; ?></div>
-        <?php endif; ?>
-        
-        <h2>Property Description</h2>
-        <p><?php echo $property['description']; ?></p>
-        
-        <div class="property-features-section">
-          <h3>Key Features</h3>
-          <div class="features-list">
-            <?php foreach($property['features'] as $feature): ?>
-              <div class="feature-item">
-                <i class="fas fa-check"></i> <?php echo $feature; ?>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
+    <!-- Property Features -->
+    <div class="property-features-grid">
+      <div class="feature">
+        <i class="fas fa-map-marker-alt"></i>
+        <span><?php echo $property['area_name']; ?>, <?php echo $property['region_name']; ?></span>
       </div>
-      
-      <!-- Right Column - Sidebar with Price and Details -->
-      <div class="property-sidebar">
-        <div class="property-sidebar-price">
-          £<?php echo $property['price']; ?> <span class="pcm">PCM</span>
-        </div>
-        
-        <div class="property-sidebar-details">
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Bedrooms</span>
-            <span class="sidebar-detail-value"><?php echo $property['bedrooms']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Bathrooms</span>
-            <span class="sidebar-detail-value"><?php echo $property['bathrooms']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Property Type</span>
-            <span class="sidebar-detail-value"><?php echo $property['type']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Postcode</span>
-            <span class="sidebar-detail-value"><?php echo $property['postcode']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Available From</span>
-            <span class="sidebar-detail-value"><?php echo $property['available_date']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Furnished</span>
-            <span class="sidebar-detail-value"><?php echo $property['furnished']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">EPC Rating</span>
-            <span class="sidebar-detail-value"><?php echo $property['epc_rating']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Council Tax Band</span>
-            <span class="sidebar-detail-value"><?php echo $property['council_tax']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Deposit</span>
-            <span class="sidebar-detail-value">£<?php echo $property['deposit']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Pets</span>
-            <span class="sidebar-detail-value"><?php echo $property['pets']; ?></span>
-          </div>
-          <div class="sidebar-detail">
-            <span class="sidebar-detail-label">Smokers</span>
-            <span class="sidebar-detail-value"><?php echo $property['smokers']; ?></span>
-          </div>
-        </div>
-        
-        <div class="contact-agent-section">
-          <h3>Arrange a Viewing</h3>
-          <form class="contact-form" action="/submit-viewing.php" method="post">
-            <input type="hidden" name="property_id" value="<?php echo $property['id']; ?>">
-            <input type="text" name="name" placeholder="Your Name" required>
-            <input type="email" name="email" placeholder="Your Email" required>
-            <input type="tel" name="phone" placeholder="Your Phone Number" required>
-            <textarea name="message" placeholder="Message (Optional)"></textarea>
-            <button type="submit">Request Viewing</button>
-          </form>
-        </div>
+      <div class="feature">
+        <i class="fas fa-bed"></i>
+        <span><?php echo $property['bedrooms']; ?> Bedrooms</span>
+      </div>
+      <div class="feature">
+        <i class="fas fa-bath"></i>
+        <span><?php echo $property['bathrooms']; ?> Bathroom<?php echo $property['bathrooms'] > 1 ? 's' : ''; ?></span>
+      </div>
+      <div class="feature">
+        <i class="fas fa-home"></i>
+        <span><?php echo $property['property_type']; ?></span>
+      </div>
+      <div class="feature">
+        <i class="fas fa-map-pin"></i>
+        <span><?php echo $property['postcode']; ?></span>
+      </div>
+      <?php if(!empty($property['available_date'])): ?>
+      <div class="feature">
+        <i class="fas fa-calendar"></i>
+        <span>Available: <?php echo date('d-m-Y', strtotime($property['available_date'])); ?></span>
+      </div>
+      <?php endif; ?>
+    </div>
+    
+    <!-- Property Description -->
+    <div class="property-description">
+      <h2>Description</h2>
+      <div class="description-content">
+        <?php echo nl2br($property['description']); ?>
       </div>
     </div>
     
-    <!-- Back to Listings Button -->
-    <div class="back-to-listings">
-      <a href="javascript:history.back()" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Back to Listings
-      </a>
+    <?php if (count($features) > 0): ?>
+    <!-- Property Additional Features -->
+    <div class="property-additional-features">
+      <h2>Additional Features</h2>
+      <ul class="features-list">
+        <?php foreach($features as $feature): ?>
+          <li><i class="fas fa-check"></i> <?php echo $feature['feature_name']; ?></li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
+    
+    <?php if (count($documents) > 0): ?>
+    <!-- Property Documents -->
+    <div class="property-documents">
+      <h2>Documents</h2>
+      <ul class="documents-list">
+        <?php foreach($documents as $document): ?>
+          <li>
+            <a href="<?php echo $document['document_path']; ?>" target="_blank">
+              <i class="fas fa-file-pdf"></i> <?php echo $document['document_name']; ?>
+            </a>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <?php endif; ?>
+    
+    <!-- Viewing Request Form -->
+    <div class="viewing-request">
+      <h2>Request a Viewing</h2>
+      <form id="viewingForm" action="process-viewing.php" method="post">
+        <input type="hidden" name="property_id" value="<?php echo $property['id']; ?>">
+        <input type="hidden" name="property_title" value="<?php echo $property['title']; ?>">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" name="phone" required>
+          </div>
+          <div class="form-group">
+            <label for="preferred_date">Preferred Date</label>
+            <input type="date" id="preferred_date" name="preferred_date">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="message">Additional Information</label>
+          <textarea id="message" name="message" rows="4"></textarea>
+        </div>
+        
+        <button type="submit" class="submit-button">Request Viewing</button>
+      </form>
     </div>
   </div>
 </section>
+
+<script>
+function changeMainImage(src) {
+  document.getElementById('mainImage').src = src;
+}
+</script>
 
 <?php
 // Include footer
