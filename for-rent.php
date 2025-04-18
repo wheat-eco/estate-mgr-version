@@ -40,13 +40,13 @@ include('includes/header.php');
           <!-- Region Location Card -->
           <a href="/to-rent-<?php echo $region['slug']; ?>.php" class="location-card">
             <div class="location-image">
-              <img src="/img/<?php echo $region['slug']; ?>.jpg" alt="<?php echo $region['name']; ?> Properties">
+              <img src="/img/<?php echo ($region['id'] % 2 == 0) ? '2' : '1'; ?>.jpg" 
+                   alt="<?php echo $region['name']; ?> Properties">
             </div>
             <div class="location-content">
               <h2 class="location-title">To Rent <?php echo $region['name']; ?></h2>
               <p class="location-description">
                 Discover our selection of rental properties in <?php echo $region['name']; ?>.
-                
               </p>
               <span class="location-button">View Properties</span>
             </div>
@@ -76,6 +76,45 @@ include('includes/header.php');
   </div>
 </section>
 
+<style>
+.rental-process {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-top: 3rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  }
+  
+  .rental-process h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #323232;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .rental-process p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #666;
+    margin-bottom: 1.5rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .rental-process a {
+    color: #e4b611;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  .rental-process a:hover {
+    color: #c49a0f;
+    text-decoration: underline;
+  }
+</style>
 <?php
 // Include footer
 include('includes/footer.php');

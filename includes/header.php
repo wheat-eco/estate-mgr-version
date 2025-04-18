@@ -125,7 +125,7 @@
                   <a href="/to-rent-north-ayrshire.php">North Ayrshire</a>
                   <a href="/to-rent-east-ayrshire.php">East Ayrshire</a>
                   <a href="/rental-guide.php">Rental Guide</a>
-                  <a href="/apply-now.php">Apply Now</a>
+                 
                 </div>
               </li>
             </ul>
