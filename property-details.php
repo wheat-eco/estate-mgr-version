@@ -7,15 +7,15 @@
 require_once('includes/db.php');
 
 // Get property ID from URL
-$propertyId = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$property_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// If no property ID provided, redirect to home page
-if ($propertyId <= 0) {
-    header('Location: index.php');
+// If no property ID provided, redirect to properties page
+if ($property_id <= 0) {
+    header('Location: /for-rent.php');
     exit;
 }
 
-// Fetch property details
+// Fetch property details from database
 $query = "SELECT p.*, a.name as area_name, r.name as region_name 
           FROM properties p 
           JOIN areas a ON p.area_id = a.id 
@@ -23,13 +23,13 @@ $query = "SELECT p.*, a.name as area_name, r.name as region_name
           WHERE p.id = ?";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $propertyId);
+$stmt->bind_param("i", $property_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// If property not found, redirect to home page
+// If property not found, redirect to properties page
 if ($result->num_rows == 0) {
-    header('Location: index.php');
+    header('Location: /for-rent.php');
     exit;
 }
 
@@ -37,9 +37,9 @@ if ($result->num_rows == 0) {
 $property = $result->fetch_assoc();
 
 // Get property images
-$imagesQuery = "SELECT * FROM property_images WHERE property_id = ? ORDER BY is_featured DESC";
+$imagesQuery = "SELECT * FROM property_images WHERE property_id = ? ORDER BY is_featured DESC, id ASC";
 $imagesStmt = $conn->prepare($imagesQuery);
-$imagesStmt->bind_param("i", $propertyId);
+$imagesStmt->bind_param("i", $property_id);
 $imagesStmt->execute();
 $imagesResult = $imagesStmt->get_result();
 
@@ -48,190 +48,293 @@ while ($image = $imagesResult->fetch_assoc()) {
     $images[] = $image;
 }
 
-// Get property documents
-$documentsQuery = "SELECT * FROM property_documents WHERE property_id = ?";
-$documentsStmt = $conn->prepare($documentsQuery);
-$documentsStmt->bind_param("i", $propertyId);
-$documentsStmt->execute();
-$documentsResult = $documentsStmt->get_result();
-
-$documents = [];
-while ($document = $documentsResult->fetch_assoc()) {
-    $documents[] = $document;
+// If no images, use a placeholder
+if (empty($images)) {
+    $images[] = [
+        'id' => 0,
+        'property_id' => $property_id,
+        'image_path' => '/img/property-placeholder.jpg',
+        'is_featured' => 1
+    ];
 }
 
 // Get property features
 $featuresQuery = "SELECT * FROM property_features WHERE property_id = ?";
 $featuresStmt = $conn->prepare($featuresQuery);
-$featuresStmt->bind_param("i", $propertyId);
+$featuresStmt->bind_param("i", $property_id);
 $featuresStmt->execute();
 $featuresResult = $featuresStmt->get_result();
 
 $features = [];
 while ($feature = $featuresResult->fetch_assoc()) {
-    $features[] = $feature;
+    $features[] = $feature['feature_name'];
+}
+
+// Get property details
+$detailsQuery = "SELECT * FROM property_details WHERE property_id = ?";
+$detailsStmt = $conn->prepare($detailsQuery);
+$detailsStmt->bind_param("i", $property_id);
+$detailsStmt->execute();
+$detailsResult = $detailsStmt->get_result();
+
+$details = [];
+if ($detailsResult->num_rows > 0) {
+    $details = $detailsResult->fetch_assoc();
 }
 
 // Page specific variables
 $pageTitle = $property['title'];
-$additionalCss = ['property-details'];
+$additionalCss = ['rental-properties'];
 
 // Include header
 include('includes/header.php');
+
+// Check for success/error messages
+$success = isset($_GET['success']) ? intval($_GET['success']) : 0;
+$error = isset($_GET['error']) ? intval($_GET['error']) : 0;
 ?>
 
 <!-- Property Details Section -->
-<section class="property-details-section">
-  <div class="property-container">
-    <div class="property-header">
-      <div class="property-title-area">
-        <h1 class="property-title"><?php echo $property['title']; ?></h1>
-        <p class="property-location"><?php echo $property['location']; ?></p>
+<section class="property-detail-section">
+  <div class="property-detail-container">
+    <?php if ($success == 1): ?>
+      <div class="alert alert-success">
+        Your viewing request has been submitted successfully. We will contact you shortly.
       </div>
-      <div class="property-price-area">
-        <div class="property-price">
-          £<?php echo number_format($property['price'], 0); ?>
-          <?php if ($property['property_category'] == 'rent'): ?>
-            <span class="pcm">PCM</span>
-          <?php endif; ?>
-        </div>
-        <div class="property-status"><?php echo $property['status']; ?></div>
+    <?php endif; ?>
+    
+    <?php if ($error > 0): ?>
+      <div class="alert alert-danger">
+        <?php if ($error == 1): ?>
+          Please fill in all required fields.
+        <?php else: ?>
+          An error occurred while submitting your request. Please try again later.
+        <?php endif; ?>
       </div>
-    </div>
+    <?php endif; ?>
     
     <!-- Property Gallery -->
     <div class="property-gallery">
-      <?php if (count($images) > 0): ?>
-        <div class="main-image">
-          <img src="<?php echo $images[0]['image_path']; ?>" alt="<?php echo $property['title']; ?>" id="mainImage">
+      <img src="<?php echo $images[0]['image_path']; ?>" alt="<?php echo $property['title']; ?>" class="main-image" id="mainImage">
+      
+      <?php if(count($images) > 1): ?>
+        <div class="thumbnail-grid">
+          <?php foreach($images as $index => $image): ?>
+            <img src="<?php echo $image['image_path']; ?>" alt="<?php echo $property['title']; ?>" class="thumbnail <?php echo $index === 0 ? 'active' : ''; ?>" onclick="changeMainImage('<?php echo $image['image_path']; ?>', <?php echo $index; ?>)">
+          <?php endforeach; ?>
         </div>
-        <?php if (count($images) > 1): ?>
-          <div class="thumbnail-container">
-            <?php foreach($images as $index => $image): ?>
-              <div class="thumbnail" onclick="changeMainImage('<?php echo $image['image_path']; ?>')">
-                <img src="<?php echo $image['image_path']; ?>" alt="Thumbnail <?php echo $index + 1; ?>">
-              </div>
-            <?php endforeach; ?>
-          </div>
+      <?php endif; ?>
+    </div>
+    
+    <!-- Property Content -->
+    <div class="property-detail-content">
+      <!-- Left Column - Description and Features -->
+      <div class="property-description-section">
+        <h1><?php echo $property['title']; ?></h1>
+        <p class="property-location"><?php echo $property['location']; ?> (<?php echo $property['region_name']; ?>)</p>
+        
+        <?php if($property['status']): ?>
+          <div class="property-status-badge"><?php echo $property['status']; ?></div>
         <?php endif; ?>
-      <?php else: ?>
-        <div class="main-image">
-          <img src="/img/property-placeholder.jpg" alt="<?php echo $property['title']; ?>">
-        </div>
-      <?php endif; ?>
-    </div>
-    
-    <!-- Property Features -->
-    <div class="property-features-grid">
-      <div class="feature">
-        <i class="fas fa-map-marker-alt"></i>
-        <span><?php echo $property['area_name']; ?>, <?php echo $property['region_name']; ?></span>
-      </div>
-      <div class="feature">
-        <i class="fas fa-bed"></i>
-        <span><?php echo $property['bedrooms']; ?> Bedrooms</span>
-      </div>
-      <div class="feature">
-        <i class="fas fa-bath"></i>
-        <span><?php echo $property['bathrooms']; ?> Bathroom<?php echo $property['bathrooms'] > 1 ? 's' : ''; ?></span>
-      </div>
-      <div class="feature">
-        <i class="fas fa-home"></i>
-        <span><?php echo $property['property_type']; ?></span>
-      </div>
-      <div class="feature">
-        <i class="fas fa-map-pin"></i>
-        <span><?php echo $property['postcode']; ?></span>
-      </div>
-      <?php if(!empty($property['available_date'])): ?>
-      <div class="feature">
-        <i class="fas fa-calendar"></i>
-        <span>Available: <?php echo date('d-m-Y', strtotime($property['available_date'])); ?></span>
-      </div>
-      <?php endif; ?>
-    </div>
-    
-    <!-- Property Description -->
-    <div class="property-description">
-      <h2>Description</h2>
-      <div class="description-content">
-        <?php echo nl2br($property['description']); ?>
-      </div>
-    </div>
-    
-    <?php if (count($features) > 0): ?>
-    <!-- Property Additional Features -->
-    <div class="property-additional-features">
-      <h2>Additional Features</h2>
-      <ul class="features-list">
-        <?php foreach($features as $feature): ?>
-          <li><i class="fas fa-check"></i> <?php echo $feature['feature_name']; ?></li>
-        <?php endforeach; ?>
-      </ul>
-    </div>
-    <?php endif; ?>
-    
-    <?php if (count($documents) > 0): ?>
-    <!-- Property Documents -->
-    <div class="property-documents">
-      <h2>Documents</h2>
-      <ul class="documents-list">
-        <?php foreach($documents as $document): ?>
-          <li>
-            <a href="<?php echo $document['document_path']; ?>" target="_blank">
-              <i class="fas fa-file-pdf"></i> <?php echo $document['document_name']; ?>
-            </a>
-          </li>
-        <?php endforeach; ?>
-      </ul>
-    </div>
-    <?php endif; ?>
-    
-    <!-- Viewing Request Form -->
-    <div class="viewing-request">
-      <h2>Request a Viewing</h2>
-      <form id="viewingForm" action="process-viewing.php" method="post">
-        <input type="hidden" name="property_id" value="<?php echo $property['id']; ?>">
-        <input type="hidden" name="property_title" value="<?php echo $property['title']; ?>">
         
-        <div class="form-row">
-          <div class="form-group">
-            <label for="name">Full Name *</label>
-            <input type="text" id="name" name="name" required>
-          </div>
-          <div class="form-group">
-            <label for="email">Email Address *</label>
-            <input type="email" id="email" name="email" required>
+        <h2>Property Description</h2>
+        <p><?php echo nl2br($property['description']); ?></p>
+        
+        <div class="property-features-section">
+          <h3>Key Features</h3>
+          <div class="features-list">
+            <?php if(count($features) > 0): ?>
+              <?php foreach($features as $feature): ?>
+                <div class="feature-item">
+                  <i class="fas fa-check"></i> <?php echo $feature; ?>
+                </div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <div class="feature-item">
+                <i class="fas fa-info-circle"></i> Contact us for more details about this property
+              </div>
+            <?php endif; ?>
           </div>
         </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="phone">Phone Number *</label>
-            <input type="tel" id="phone" name="phone" required>
-          </div>
-          <div class="form-group">
-            <label for="preferred_date">Preferred Date</label>
-            <input type="date" id="preferred_date" name="preferred_date">
-          </div>
+      </div>
+      
+      <!-- Right Column - Sidebar with Price and Details -->
+      <div class="property-sidebar">
+        <div class="property-sidebar-price">
+          £<?php echo number_format($property['price'], 0); ?> 
+          <?php if($property['property_category'] == 'rent'): ?>
+            <span class="pcm">PCM</span>
+          <?php endif; ?>
         </div>
         
-        <div class="form-group">
-          <label for="message">Additional Information</label>
-          <textarea id="message" name="message" rows="4"></textarea>
+        <div class="property-sidebar-details">
+          <div class="sidebar-detail">
+            <span class="sidebar-detail-label">Bedrooms</span>
+            <span class="sidebar-detail-value"><?php echo $property['bedrooms']; ?></span>
+          </div>
+          <div class="sidebar-detail">
+            <span class="sidebar-detail-label">Bathrooms</span>
+            <span class="sidebar-detail-value"><?php echo $property['bathrooms']; ?></span>
+          </div>
+          <div class="sidebar-detail">
+            <span class="sidebar-detail-label">Property Type</span>
+            <span class="sidebar-detail-value"><?php echo $property['property_type']; ?></span>
+          </div>
+          <div class="sidebar-detail">
+            <span class="sidebar-detail-label">Postcode</span>
+            <span class="sidebar-detail-value"><?php echo $property['postcode']; ?></span>
+          </div>
+          <?php if(!empty($property['available_date'])): ?>
+          <div class="sidebar-detail">
+            <span class="sidebar-detail-label">Available From</span>
+            <span class="sidebar-detail-value"><?php echo date('d-m-Y', strtotime($property['available_date'])); ?></span>
+          </div>
+          <?php endif; ?>
+          
+          <?php if (!empty($details)): ?>
+              <?php if (!empty($details['furnished_status'])): ?>
+              <div class="sidebar-detail">
+                <span class="sidebar-detail-label">Furnished</span>
+                <span class="sidebar-detail-value"><?php echo $details['furnished_status']; ?></span>
+              </div>
+              <?php endif; ?>
+              
+              <?php if (!empty($details['epc_rating'])): ?>
+              <div class="sidebar-detail">
+                <span class="sidebar-detail-label">EPC Rating</span>
+                <span class="sidebar-detail-value"><?php echo $details['epc_rating']; ?></span>
+              </div>
+              <?php endif; ?>
+              
+              <?php if (!empty($details['council_tax_band'])): ?>
+              <div class="sidebar-detail">
+                <span class="sidebar-detail-label">Council Tax Band</span>
+                <span class="sidebar-detail-value"><?php echo $details['council_tax_band']; ?></span>
+              </div>
+              <?php endif; ?>
+              
+              <?php if (!empty($details['deposit_amount'])): ?>
+              <div class="sidebar-detail">
+                <span class="sidebar-detail-label">Deposit</span>
+                <span class="sidebar-detail-value">£<?php echo number_format($details['deposit_amount'], 0); ?></span>
+              </div>
+              <?php endif; ?>
+              
+              <?php if (!empty($details['pets_policy'])): ?>
+              <div class="sidebar-detail">
+                <span class="sidebar-detail-label">Pets</span>
+                <span class="sidebar-detail-value"><?php echo $details['pets_policy']; ?></span>
+              </div>
+              <?php endif; ?>
+              
+              <?php if (!empty($details['smoking_policy'])): ?>
+              <div class="sidebar-detail">
+                <span class="sidebar-detail-label">Smokers</span>
+                <span class="sidebar-detail-value"><?php echo $details['smoking_policy']; ?></span>
+              </div>
+              <?php endif; ?>
+          <?php endif; ?>
         </div>
         
-        <button type="submit" class="submit-button">Request Viewing</button>
-      </form>
+        <div class="contact-agent-section">
+          <h3>Arrange a Viewing</h3>
+          <form class="contact-form" action="/submit-viewing.php" method="post">
+            <input type="hidden" name="property_id" value="<?php echo $property['id']; ?>">
+            <input type="hidden" name="property_title" value="<?php echo $property['title']; ?>">
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email" required>
+            <input type="tel" name="phone" placeholder="Your Phone Number" required>
+            <input type="date" name="preferred_date" placeholder="Preferred Date (Optional)">
+            <textarea name="message" placeholder="Message (Optional)"></textarea>
+            <button type="submit">Request Viewing</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Back to Listings Button -->
+    <div class="back-to-listings">
+      <a href="javascript:history.back()" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Listings
+      </a>
     </div>
   </div>
 </section>
 
 <script>
-function changeMainImage(src) {
+function changeMainImage(src, index) {
   document.getElementById('mainImage').src = src;
+  
+  // Add active class to selected thumbnail
+  const thumbnails = document.querySelectorAll('.thumbnail');
+  thumbnails.forEach((thumb, i) => {
+    if (i === index) {
+      thumb.classList.add('active');
+    } else {
+      thumb.classList.remove('active');
+    }
+  });
 }
 </script>
+
+<style>
+/* Enhanced Gallery Styles */
+.property-gallery {
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.main-image {
+  width: 100%;
+  height: 500px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.thumbnail:hover {
+  opacity: 0.8;
+}
+
+.thumbnail.active {
+  border-color: #e4b611;
+}
+
+/* Alert Styles */
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+</style>
 
 <?php
 // Include footer
