@@ -53,7 +53,7 @@ $propertyCount = count($properties);
     <h1 class="rental-heading">FOR SALE NORTH AYRSHIRE</h1>
     <p class="rental-subheading">
       Please find below a selection of our properties for sale in North Ayrshire.
-      We currently have <?php echo $propertyCount; ?> properties available.
+     
     </p>
     
     <div class="properties-list">

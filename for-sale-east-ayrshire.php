@@ -98,7 +98,7 @@ if ($areasResult && $areasResult->num_rows > 0) {
     <h1 class="sale-heading">FOR SALE IN EAST AYRSHIRE</h1>
     <p class="sale-subheading">
       Browse our selection of properties for sale in East Ayrshire, including Kilmarnock, Stewarton, Cumnock, and surrounding areas.
-      We currently have <?php echo $propertyCount; ?> properties available.
+      
     </p>
     
     <!-- Filter Section -->

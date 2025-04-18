@@ -46,7 +46,7 @@ include('includes/header.php');
               <h2 class="location-title">To Rent <?php echo $region['name']; ?></h2>
               <p class="location-description">
                 Discover our selection of rental properties in <?php echo $region['name']; ?>.
-                We currently have <?php echo $region['property_count']; ?> properties available.
+                
               </p>
               <span class="location-button">View Properties</span>
             </div>

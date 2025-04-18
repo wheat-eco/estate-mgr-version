@@ -52,7 +52,7 @@ $propertyCount = count($properties);
   <div class="rental-container">
     <h1 class="rental-heading">TO RENT EAST AYRSHIRE</h1>
     <p class="rental-subheading">
-      Discover our selection of rental properties in East Ayrshire. We currently have <?php echo $propertyCount; ?> properties available.
+      Discover our selection of rental properties in East Ayrshire. 
     </p>
     
     <div class="properties-list">

@@ -53,7 +53,7 @@ $propertyCount = count($properties);
     <h1 class="rental-heading">TO RENT NORTH AYRSHIRE</h1>
     <p class="rental-subheading">
       Please find below a selection of our rental properties in North Ayrshire. 
-      We currently have <?php echo $propertyCount; ?> properties available.
+     
     </p>
     
     <div class="properties-list">
