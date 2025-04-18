@@ -11,12 +11,18 @@ requireLogin();
 // Get property counts
 $rentQuery = "SELECT COUNT(*) as count FROM properties WHERE property_category = 'rent'";
 $saleQuery = "SELECT COUNT(*) as count FROM properties WHERE property_category = 'sale'";
+$viewingQuery = "SELECT COUNT(*) as count FROM viewing_requests WHERE status = 'pending'";
+$valuationQuery = "SELECT COUNT(*) as count FROM valuation_requests WHERE status = 'pending'";
 
 $rentResult = $conn->query($rentQuery);
 $saleResult = $conn->query($saleQuery);
+$viewingResult = $conn->query($viewingQuery);
+$valuationResult = $conn->query($valuationQuery);
 
 $rentCount = $rentResult->num_rows > 0 ? $rentResult->fetch_assoc()['count'] : 0;
 $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0;
+$pendingViewings = $viewingResult->num_rows > 0 ? $viewingResult->fetch_assoc()['count'] : 0;
+$pendingValuations = $valuationResult->num_rows > 0 ? $valuationResult->fetch_assoc()['count'] : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -113,7 +119,7 @@ $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0
         
         .stats-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -169,6 +175,19 @@ $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0
             margin: 0;
             color: #666;
         }
+        
+        .alert-count {
+            display: inline-block;
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -184,7 +203,25 @@ $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0
                     <li><a href="index.php" class="active">Dashboard</a></li>
                     <li><a href="properties.php">Properties</a></li>
                     <li><a href="add-property.php">Add Property</a></li>
+                    <li><a href="regions.php">Regions</a></li>
+                    <li><a href="areas.php">Areas</a></li>
                     <li><a href="users.php">Users</a></li>
+                    <li>
+                        <a href="viewing-requests.php">
+                            Viewing Requests
+                            <?php if ($pendingViewings > 0): ?>
+                                <span class="alert-count"><?php echo $pendingViewings; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="valuation-requests.php">
+                            Valuation Requests
+                            <?php if ($pendingValuations > 0): ?>
+                                <span class="alert-count"><?php echo $pendingValuations; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                     <li><a href="logout.php">Logout</a></li>
                 </ul>
             </nav>
@@ -210,6 +247,16 @@ $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0
                     <h3>Sale Properties</h3>
                     <p class="stat-number"><?php echo $saleCount; ?></p>
                 </div>
+                
+                <div class="stat-card">
+                    <h3>Pending Viewings</h3>
+                    <p class="stat-number"><?php echo $pendingViewings; ?></p>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>Pending Valuations</h3>
+                    <p class="stat-number"><?php echo $pendingValuations; ?></p>
+                </div>
             </div>
             
             <h2>Quick Actions</h2>
@@ -225,6 +272,21 @@ $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0
                     <p>View and edit existing properties</p>
                 </a>
                 
+                <a href="regions.php" class="action-button">
+                    <h3>Manage Regions</h3>
+                    <p>Add or edit regions and areas</p>
+                </a>
+                
+                <a href="viewing-requests.php" class="action-button">
+                    <h3>Viewing Requests</h3>
+                    <p>Manage property viewing requests</p>
+                </a>
+                
+                <a href="valuation-requests.php" class="action-button">
+                    <h3>Valuation Requests</h3>
+                    <p>Manage property valuation requests</p>
+                </a>
+                
                 <a href="users.php" class="action-button">
                     <h3>Manage Users</h3>
                     <p>Add or edit admin users</p>
@@ -234,3 +296,4 @@ $saleCount = $saleResult->num_rows > 0 ? $saleResult->fetch_assoc()['count'] : 0
     </div>
 </body>
 </html>
+

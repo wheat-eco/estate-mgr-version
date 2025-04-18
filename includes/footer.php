@@ -40,19 +40,19 @@
             <ul class="footer-links">
               <li><a href="/index.php">Home</a></li>
               <li><a href="/our-story.php">About Us</a></li>
-              <li><a href="/for-sale-north-ayrshire.php">Properties</a></li>
+              <li><a href="/properties.php">Properties</a></li>
               <li><a href="/services.php">Services</a></li>
               <li><a href="/contact.php">Contact</a></li>
             </ul>
           </div>
 
           <div class="footer-column">
-            <h3>Services</h3>
+            <h3>Properties</h3>
             <ul class="footer-links">
-              <li><a href="/selling.php">Property Sales</a></li>
-              <li><a href="/for-rent.php">Property Rentals</a></li>
-              <li><a href="/property-management.php">Property Management</a></li>
-              <li><a href="/financial-services.php">Financial Services</a></li>
+              <li><a href="/for-sale-north-ayrshire.php">North Ayrshire For Sale</a></li>
+              <li><a href="/for-sale-east-ayrshire.php">East Ayrshire For Sale</a></li>
+              <li><a href="/to-rent-north-ayrshire.php">North Ayrshire To Rent</a></li>
+              <li><a href="/to-rent-east-ayrshire.php">East Ayrshire To Rent</a></li>
               <li><a href="/valuation.php">Property Valuation</a></li>
             </ul>
           </div>
