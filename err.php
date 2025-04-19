@@ -5,10 +5,10 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Database configuration - update these with your actual database details
-$db_host = 'localhost';
-$db_user = 'root'; // Change to your database username
-$db_pass = ''; // Change to your database password
-$db_name = 'love_view_estate';
+$db_host = 'srv1216.hstgr.io';
+$db_user = 'u368036953_muizdev'; // Change to your database username
+$db_pass = 'Adeniyi2020#'; // Change to your database password
+$db_name = 'u368036953_loveview';
 
 echo "<h1>PHP Error Diagnostic</h1>";
 
