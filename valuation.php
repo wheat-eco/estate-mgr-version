@@ -19,7 +19,7 @@ include('includes/header.php');
       <p>We offer free instant online sales and rental valuations of your property, simply click the button on this page to get your results. Do remember that every property is different and we would always strongly advise you to take up our free no-obligation valuation in person by one of our experts to give you an accurate valuation of your property.</p>
     </div>
     <div class="valuation-hero-image">
-      <img src="/img/team-photo.jpg" alt="Love View Estate Team" />
+      <img src="/img/team.jpg" alt="Love View Estate Team" />
     </div>
   </div>
 </section>
